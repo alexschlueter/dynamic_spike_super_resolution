@@ -56,7 +56,7 @@ end
 # Spatial resolution of this approximation
 M = 500
 if x_max != 1.0
-    warn(" Beware, the interval where we decided to consider the separations was tuned
+    @warn(" Beware, the interval where we decided to consider the separations was tuned
     for the specific case of x_max equal to 1, since you modified this value, check if
         upper and lowerLimit is adequate for your use, just plot an histogram of the 		separations.")
 end

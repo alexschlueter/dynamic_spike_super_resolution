@@ -109,7 +109,7 @@ function primalDualSolve(p :: OptimizationProblem, x :: Vector{Float64}, lambda 
     lambda = lambda + s*sd_lambda
   end
   if iter == max_iters
-    warn("Hit max iters in interior point method!")
+    @warn("Hit max iters in interior point method!")
   end
   return x,lambda
 end

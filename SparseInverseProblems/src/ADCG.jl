@@ -10,7 +10,7 @@ function ADCG(sim :: ForwardModel, lossFn :: Loss, y :: Vector{Float64}, tau :: 
   resume=nothing)
   @assert(tau > 0.0)
   bound = -Inf
-  if resume === nothing
+  if isnothing(resume)
     thetas = zeros(0,0) #hack
     weights = zeros(0)
     #cache the forward model applied to the current measure.
@@ -50,7 +50,7 @@ function ADCG(sim :: ForwardModel, lossFn :: Loss, y :: Vector{Float64}, tau :: 
       return old_thetas, old_weights
     end
   end
-  warn("Hit max iters in frank-wolfe!")
+  @warn("Hit max iters in frank-wolfe!")
   return thetas, weights
 end
 
@@ -58,8 +58,8 @@ end
 #Feel free to override
 function localUpdate(sim :: ForwardModel,lossFn :: Loss,
     thetas :: Matrix{Float64}, y :: Vector{Float64}, tau :: Float64, max_iters)
-  cd_iter = 1
   for cd_iter = 1:max_iters
+    global outer_cd_iter = cd_iter
     # println("Printing from withing the Local update, iteration: ", cd_iter)
     tstart = Dates.now()
     weights = solveFiniteDimProblem(sim, lossFn, thetas, y, tau)
@@ -86,12 +86,12 @@ function localUpdate(sim :: ForwardModel,lossFn :: Loss,
   tstart = Dates.now()
   weights = solveFiniteDimProblem(sim, lossFn, thetas, y, tau)
   tend = Dates.now()
-  println("Local update $cd_iter, final prune took $(Dates.value(tend - tstart) / 1000) secs")
+  println("Local update $outer_cd_iter, final prune took $(Dates.value(tend - tstart) / 1000) secs")
   if any(weights.==0.0)
     println("Removing ",sum(weights.==0.0), " zero-weight points.")
     thetas = thetas[:,weights.!= 0.0]
     weights = weights[weights.!= 0.0]
   end
-  println("Exiting local update, iteration: ", cd_iter)
+  println("Exiting local update, iteration: ", outer_cd_iter)
   return thetas, weights
 end

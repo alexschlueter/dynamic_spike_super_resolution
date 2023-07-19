@@ -32,13 +32,23 @@ function run_simulation_target(jobid, model, thetas, weights, target, algIter; m
         new_obj_val,t = loss(LSLoss(), output - target)
         tnow = Dates.now()
         secs = Dates.value(tnow - tstart) / 1000
+        if !isnothing(resume)
+            secs += resume["opt_time"]
+        end
         println("$secs | gap = $(old_obj_val - new_obj_val) > 1e-4, continuing")
         if old_obj_val - new_obj_val < min_obj_progress
             return true
         else
             if save_state && (iter % 5 == 0 || iter > 30)
                 # save state
-                np.save("state/state_$(jobid).npy", (thetas, weights, output, iter))
+                # np.save("state/state_$(jobid).npy", (thetas, weights, output, iter))
+                np.save("state/state_$(jobid).npy", Dict(
+                    "thetas" => thetas,
+                    "weights" => weights,
+                    "output" => output,
+                    "iter" => iter,
+                    "opt_time" => secs
+                ))
             end
             return false
         end
@@ -60,7 +70,7 @@ function generate_target(model, thetas, weights, noise_level = 0.0, noise_positi
     noise = randn(size(target))*noise_level
     # Each particle's signal is bounded by it's weights, we set them to 1 ideally
     if (maximum(weights)>2 || minimum(weights)<0.1) && noise_level > 0 
-	warn(" The proportionality of noise is not accurate as the weights are too high or low ")
+	@warn(" The proportionality of noise is not accurate as the weights are too high or low ")
     end
     # So a porcentage is obtained by just ponderating the noise.
     return target + noise
@@ -180,7 +190,7 @@ function generate_and_reconstruct_dynamic(model_dynamic, thetas, weights, target
     d = dim(model_dynamic)
     # run the algorithm on the points thetas with the respective noises.
     (thetas_est, weights_est) = try run_simulation_target(model_dynamic, thetas, weights, target, algIter) catch  
-	warn("fail") 
+	@warn("fail") 
 	([0], [0]) 
 	end
     # Discard any reconstruction with smaller weight than some threshold.
@@ -209,7 +219,7 @@ function generate_and_reconstruct_static(model_static, thetas, weights, target_s
     (thetas_est, weights_est) = try
         run_simulation_target(model_static, thetas, weights, target_static, algIter)
     catch
-        warn("fail")
+        @warn("fail")
         ([0], [0])
     end
     thetas_est = thetas_est[:, weights_est .> threshold_weight]
