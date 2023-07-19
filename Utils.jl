@@ -4,7 +4,7 @@ push!(LOAD_PATH, ".")
 module Utils
 import Dates
 using SparseInverseProblemsMod
-using SuperResModels
+using ..SuperResModels
 threshold_weight = 1e-1
 export run_simulation, generate_and_reconstruct_all
 

@@ -1,0 +1,7 @@
+name = "SparseInverseProblemsMod"
+uuid = "d8ab90e0-51c8-45e2-ba15-e20c8ac12ac2"
+
+[deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"

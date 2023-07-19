@@ -1,0 +1,9 @@
+name = "DynSpikeSuperRes"
+uuid = "52138c86-aade-4018-a0a0-62fe117e237a"
+
+[deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+SparseInverseProblemsMod = "d8ab90e0-51c8-45e2-ba15-e20c8ac12ac2"
