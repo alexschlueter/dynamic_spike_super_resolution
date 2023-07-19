@@ -3,7 +3,7 @@ import SparseInverseProblems: lmo, phi, solveFiniteDimProblem, localDescent,
 getStartingPoint, parameterBounds, computeGradient
 using SparseInverseProblems.Util
 
-immutable GaussBlur2D <: BoxConstrainedDifferentiableModel
+struct GaussBlur2D <: BoxConstrainedDifferentiableModel
   sigma :: Float64
   n_pixels :: Int64
   grid :: Vector{Float64} #this is small now.
@@ -19,7 +19,7 @@ function getStartingPoint(model :: GaussBlur2D, v :: Vector{Float64})
   v = reshape(v, model.n_pixels, model.n_pixels)
   ng = length(model.grid)
   grid_objective_values = vec(model.grid_f'*v*model.grid_f)
-  best_point_lin_idx = indmin(grid_objective_values)
+  best_point_lin_idx = argmin(grid_objective_values)
   best_point_idx = ind2sub((ng,ng), best_point_lin_idx)
   best_grid_score = grid_objective_values[best_point_lin_idx]
   return [model.grid[best_point_idx[2]];model.grid[best_point_idx[1]]]

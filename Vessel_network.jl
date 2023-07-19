@@ -10,12 +10,12 @@ using QuadGK
 
 export Tree, addchild, Absolute_Vessel, displacement, evaluation, Uniform_sampler
 
-type TreeNode
+mutable struct TreeNode
     parent::Int
     children::Vector{Int}
     curveData::Array{Any,1}
 end
-type Tree
+mutable struct Tree
     nodes::Vector{TreeNode}
 end
 Tree(data) = Tree([TreeNode(0, Vector{Int}(), data)])
@@ -62,7 +62,7 @@ function segment_generator(Vessel, id)
             while arclength(max_sample)[1]-tf < 0
                 max_sample = max_sample*2
             end
-            t_sample = [t for t = linspace(0,max_sample,1000)]
+            t_sample = [t for t = range(0,max_sample, length=1000)]
             arclength_sample = [arclength(t)[1] for t in t_sample]
             inv_interp = LinearInterpolation(arclength_sample, t_sample)
         f = t -> g(inv_interp(t))

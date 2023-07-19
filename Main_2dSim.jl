@@ -34,7 +34,7 @@ using PyCall
 end
 
 # Get time of script start
-now_str = string(now())
+now_str = string(Dates.now())
 now_str = replace(now_str, ":", "-")
 now_str = replace(now_str, ".", "-")
 
@@ -155,7 +155,7 @@ println("The number of jumps is: ", length(jumps))
 ### Function that given the a subquence of the total video, will estimate the
 ### locations and weights of the involved particles.
 @everywhere function posvel_from_seq(video, seq)
-    assert(length(seq) == 5)
+    @assert(length(seq) == 5)
     target = video[:,seq][:]
     # estimated number of particles in the sequence.
     est_num_particles = div(frame_norms[seq[1]], single_particle_norm*0.95)

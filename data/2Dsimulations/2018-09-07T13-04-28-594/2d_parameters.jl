@@ -66,7 +66,7 @@ function vessel(t)
     deriv_norm(tt) = sqrt(curve_deriv(tt)[1]^2 + curve_deriv(tt)[2]^2)
     arclength(tt) = quadgk(deriv_norm, 0, tt)
     # we invert the arclength
-    t_sample = [t for t = linspace(0,max_t,1000)]
+    t_sample = [t for t = range(0,max_t, length=1000)]
     arclength_sample = [arclength(t)[1] for t in t_sample]
     inv_interp = LinearInterpolation(arclength_sample, t_sample)
     natural_curve(tt) = ellipse_curve(inv_interp(tt))

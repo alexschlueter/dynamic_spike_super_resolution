@@ -12,7 +12,7 @@ using PyCall
 @pyimport matplotlib.pyplot as plt
 
 # Containers to handle parameters
-type StaticParameters
+mutable struct StaticParameters
     # allowed frequencies
     f_c::Int64
     # spatial max val.
@@ -22,7 +22,7 @@ type StaticParameters
     # Weights on the allowed frequencies.
     filter_x::Array{Float64}
 end
-type DynamicParameters
+mutable struct DynamicParameters
     # 2K+1 is the number of time samples.
     K::Int64
     # sampling rate

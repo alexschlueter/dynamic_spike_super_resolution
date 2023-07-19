@@ -1,19 +1,29 @@
 export ADCG
+import Dates
 
 function ADCG(sim :: ForwardModel, lossFn :: Loss, y :: Vector{Float64}, tau :: Float64;
-  callback :: Function = (old_thetas,thetas, weights,output,old_obj_val) -> false,
+  callback :: Function = (iter, old_thetas,thetas, weights,output,old_obj_val) -> false,
   max_iters :: Int64 = 50,
   min_optimality_gap :: Float64 = 1E-5,
   max_cd_iters :: Int64 = 200,
-  fully_corrective :: Bool = false)
-  assert(tau > 0.0)
+  fully_corrective :: Bool = false,
+  resume=nothing)
+  @assert(tau > 0.0)
   bound = -Inf
-  thetas = zeros(0,0) #hack
-  weights = zeros(0)
-  #cache the forward model applied to the current measure.
-  output = zeros(length(y))
-  for iter = 1:max_iters
-    println("Registering an iteration inside ADCG: ", iter)
+  if resume === nothing
+    thetas = zeros(0,0) #hack
+    weights = zeros(0)
+    #cache the forward model applied to the current measure.
+    output = zeros(length(y))
+    start_iter = 1
+  else
+    thetas = resume["thetas"]
+    weights = resume["weights"]
+    output = resume["output"]
+    start_iter = resume["iter"]+1
+  end
+  for iter = start_iter:max_iters
+    println("Registering an iteration inside ADCG: Iter $iter with $(size(thetas)[2]) thetas")
     #compute the current residual
     residual = output - y
     #evalute the objective value and gradient of the loss
@@ -36,7 +46,7 @@ function ADCG(sim :: ForwardModel, lossFn :: Loss, y :: Vector{Float64}, tau :: 
     old_weights = copy(weights)
     thetas,weights = localUpdate(sim,lossFn,thetas,y,tau,max_cd_iters)
     output = phi(sim, thetas, weights)
-    if callback(old_thetas, thetas,weights, output, objective_value)
+    if callback(iter, old_thetas, thetas,weights, output, objective_value)
       return old_thetas, old_weights
     end
   end
@@ -48,9 +58,13 @@ end
 #Feel free to override
 function localUpdate(sim :: ForwardModel,lossFn :: Loss,
     thetas :: Matrix{Float64}, y :: Vector{Float64}, tau :: Float64, max_iters)
+  cd_iter = 1
   for cd_iter = 1:max_iters
-    println("Printing from withing the Local update, iteration: ", cd_iter)
+    # println("Printing from withing the Local update, iteration: ", cd_iter)
+    tstart = Dates.now()
     weights = solveFiniteDimProblem(sim, lossFn, thetas, y, tau)
+    tend = Dates.now()
+    println("Local update $cd_iter, finiteDimProblem took $(Dates.value(tend - tstart) / 1000) secs")
     #remove points with zero weight
     if any(weights.==0.0)
       println("Removing ",sum(weights.==0.0), " zero-weight points.")
@@ -58,7 +72,10 @@ function localUpdate(sim :: ForwardModel,lossFn :: Loss,
       weights = weights[weights.!= 0.0]
     end
     #local minimization over the support
+    tstart = Dates.now()
     new_thetas = localDescent(sim, lossFn, thetas,weights, y)
+    tend = Dates.now()
+    println("Local update $cd_iter, localDescent took $(Dates.value(tend - tstart) / 1000) secs")
     #break if termination condition is met
     if length(thetas) == length(new_thetas) && maximum(abs.(vec(thetas)-vec(new_thetas))) <= 1E-7
         break
@@ -66,11 +83,15 @@ function localUpdate(sim :: ForwardModel,lossFn :: Loss,
     thetas = new_thetas
   end
   #final prune
+  tstart = Dates.now()
   weights = solveFiniteDimProblem(sim, lossFn, thetas, y, tau)
+  tend = Dates.now()
+  println("Local update $cd_iter, final prune took $(Dates.value(tend - tstart) / 1000) secs")
   if any(weights.==0.0)
     println("Removing ",sum(weights.==0.0), " zero-weight points.")
     thetas = thetas[:,weights.!= 0.0]
     weights = weights[weights.!= 0.0]
   end
+  println("Exiting local update, iteration: ", cd_iter)
   return thetas, weights
 end

@@ -1,7 +1,7 @@
 using SparseInverseProblems
 import SparseInverseProblems: getStartingPoint, parameterBounds, psi, dpsi
 
-immutable SimpleExample <: BoxConstrainedDifferentiableModel
+struct SimpleExample <: BoxConstrainedDifferentiableModel
   evaluation_points :: Vector{Float64}
   grid_points :: Vector{Float64}
   grid :: Matrix{Float64}
@@ -15,6 +15,6 @@ psi(s :: SimpleExample, parameters :: Vector{Float64}) = psf(parameters,s.evalua
 
 dpsi(s :: SimpleExample, parameters :: Vector{Float64}) = reshape(deriv_psf(parameters,s.evaluation_points),length(s.evaluation_points),1)
 
-getStartingPoint(model :: SimpleExample, v :: Vector{Float64}) = [model.grid_points[indmin(model.grid'*v)]]
+getStartingPoint(model :: SimpleExample, v :: Vector{Float64}) = [model.grid_points[argmin(model.grid'*v)]]
 
 parameterBounds(model :: SimpleExample) = ([-Inf], [Inf])

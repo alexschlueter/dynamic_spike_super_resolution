@@ -1,6 +1,8 @@
+__precompile__(false)
 push!(LOAD_PATH, "./models")
 push!(LOAD_PATH, ".")
 module Utils
+import Dates
 using SparseInverseProblemsMod
 using SuperResModels
 threshold_weight = 1e-1
@@ -21,20 +23,28 @@ function psi_noise(model :: DynamicSuperRes, theta :: Vector{Float64}, dsec :: F
     return vcat([psi(model.static, theta[1:d] + t * theta[d+1:end] + t^2*dsec*theta[d+1:end]/tauK/2) for t in model.times]...)
 end
 
-function run_simulation_target(model, thetas, weights, target, algIter)
+function run_simulation_target(jobid, model, thetas, weights, target, algIter; min_obj_progress=1e-4, save_state=false, resume=nothing)
 # We simulate the reconstruction algorithm on the data given by target, and we return
 # the error values from the background truth.
-    function callback(old_thetas, thetas, weights, output, old_obj_val)
-       #evalute current OV
-       new_obj_val,t = loss(LSLoss(), output - target)
-       #println("gap = $(old_obj_val - new_obj_val)")
-       if old_obj_val - new_obj_val < 1E-4
-           return true
-       end
-    return false
+    tstart = Dates.now()
+    function callback(iter, old_thetas, thetas, weights, output, old_obj_val)
+        #evalute current OV
+        new_obj_val,t = loss(LSLoss(), output - target)
+        tnow = Dates.now()
+        secs = Dates.value(tnow - tstart) / 1000
+        println("$secs | gap = $(old_obj_val - new_obj_val) > 1e-4, continuing")
+        if old_obj_val - new_obj_val < min_obj_progress
+            return true
+        else
+            if save_state && (iter % 5 == 0 || iter > 30)
+                # save state
+                np.save("state/state_$(jobid).npy", (thetas, weights, output, iter))
+            end
+            return false
+        end
     end
     # Inverse problem
-    (thetas_est,weights_est) = ADCG(model, LSLoss(), target,sum(weights), callback=callback, max_iters=algIter)
+    (thetas_est,weights_est) = ADCG(model, LSLoss(), target,sum(weights), callback=callback, max_iters=algIter, resume=resume)
     return (thetas_est, weights_est)
 end
 
@@ -76,7 +86,7 @@ function match_points(theta_1, theta_2)
     end
     # We take the closest ones and match them
     for k = 1:n_points
-	x = indmin(distances)
+	x = argmin(distances)
 	(i,j) = (iindex(x,n_points), jindex(x,n_points))
 	corres[i]=j
 	distances[i,:] = Inf

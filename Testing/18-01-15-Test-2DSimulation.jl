@@ -13,7 +13,7 @@ using SparseInverseProblems
 end
 
 # Get time of script start
-now_str = string(now())
+now_str = string(Dates.now())
 now_str = replace(now_str, ":", "-")
 now_str = replace(now_str, ".", "-")
 

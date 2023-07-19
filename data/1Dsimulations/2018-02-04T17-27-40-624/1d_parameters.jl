@@ -27,8 +27,8 @@ test_case = () -> TestCases.cloud_1d_full(x_max, v_max, minWeights, maxWeights, 
 # in Utils.js is not either updated for it, or disabled.
 
 # Noise parameters
-noises_data = linspace(0,0.1,5)
+noises_data = range(0,0.1, length=5)
 noises_data = noises_data[2:end]
-noises_position = linspace(0,0.01,5)
+noises_position = range(0,0.01, length=5)
 noises_position = noises_position[2:end]
 

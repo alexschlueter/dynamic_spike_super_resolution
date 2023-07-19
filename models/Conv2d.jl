@@ -1,4 +1,4 @@
-immutable Conv2dParameters
+struct Conv2dParameters
     x_max :: Float64
     y_max :: Float64
     filter :: Function
@@ -9,7 +9,7 @@ immutable Conv2dParameters
     guess_error_x :: Float64
     guess_error_y :: Float64
 end
-immutable Conv2d <: SuperRes
+struct Conv2d <: SuperRes
     x_max :: Float64
     y_max :: Float64
     filter :: Function
@@ -57,7 +57,7 @@ end
 function getStartingPoint(model :: Conv2d, v :: Vector{Float64})
     # This function gets an initial value for the location
     guess_array = map((x,y) -> dot(v, psi(model, [x;y])), model.guess_grid_x, model.guess_grid_y)
-    ind = indmin(guess_array);
+    ind = argmin(guess_array);
     res = [model.guess_grid_x[ind]; model.guess_grid_y[ind]]
     return res
 end
@@ -65,14 +65,14 @@ end
 parameterBounds(model :: Conv2d) = [0.0; 0.0], [model.x_max; model.y_max] # Bounds for the parameters
 dim(model :: Conv2d) = 2
 
-type DynamicConv2dParameters
+mutable struct DynamicConv2dParameters
     K :: Int64
     tau :: Float64
     v_max :: Float64
     num_v :: Int64
 end
 
-type DynamicConv2d<: SuperRes
+mutable struct DynamicConv2d<: SuperRes
     static :: Conv2d
     v_max :: Float64
     eval_grid_x :: Array{Float64}
@@ -85,11 +85,11 @@ type DynamicConv2d<: SuperRes
     eval_array :: Vector{Float64}
     eval_array_grad :: Array{Float64}
     function DynamicConv2d(static :: Conv2d, params::DynamicConv2dParameters)
-        times = linspace(-params.K*params.tau, params.K*params.tau, 2*params.K + 1)
+        times = range(-params.K*params.tau, params.K*params.tau, length=2*params.K + 1)
         eval_grid_x = [x for x in static.eval_grid_x, t in times][:]
         eval_grid_y = [y for y in static.eval_grid_y, t in times][:]
         eval_grid_t = [t for x in static.eval_grid_y, t in times][:]
-        velocities = linspace(-params.v_max, params.v_max, params.num_v)
+        velocities = range(-params.v_max, params.v_max, length=params.num_v)
         guess_grid_x = [x for x in static.guess_grid_x, vx in velocities, vy in velocities][:]
         guess_grid_y = [y for y in static.guess_grid_y, vx in velocities, vy in velocities][:]   
         guess_grid_vx = [vx for y in static.guess_grid_y, vx in velocities, vy in velocities][:] 
@@ -128,7 +128,7 @@ end
 function getStartingPoint(model :: DynamicConv2d, v :: Vector{Float64})
     # This function gets an initial value for the location
     guess_array = map((x,y, vx, vy) -> dot(v, psi(model, [x;y;vx;vy])), model.guess_grid_x, model.guess_grid_y, model.guess_grid_vx, model.guess_grid_vy)
-    ind = indmin(guess_array);
+    ind = argmin(guess_array);
     return vec([model.guess_grid_x[ind]; model.guess_grid_y[ind]; model.guess_grid_vx[ind]; model.guess_grid_vy[ind]])
 end
 

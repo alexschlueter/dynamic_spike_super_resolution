@@ -62,7 +62,7 @@ if x_max != 1.0
 end
 upperLimit = 0.06
 lowerLimit = 0.001
-binss = linspace(lowerLimit,upperLimit,M)
+binss = range(lowerLimit,upperLimit, length=M)
 vals = np.histogram(separations, bins = binss )
 vals = vals[1]/(binss[2]-binss[1])/N
 

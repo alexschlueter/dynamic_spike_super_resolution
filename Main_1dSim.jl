@@ -48,7 +48,7 @@ separations_array = vcat([result[1] for result in results]...)
 separation_dyn_array = vcat([result[2] for result in results]...)
 
 #
-now_str = string(now())
+now_str = string(Dates.now())
 now_str = replace(now_str, ":", "-")
 now_str = replace(now_str, ".", "-")
 

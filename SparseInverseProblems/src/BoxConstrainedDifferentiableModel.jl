@@ -69,7 +69,7 @@ function lmo(model :: BoxConstrainedDifferentiableModel, v :: Vector{Float64})
   return (optx,optf)
 end
 
-immutable SupportUpdateProblem
+struct SupportUpdateProblem
   nPoints :: Int64
   p :: Int64
   s :: BoxConstrainedDifferentiableModel
@@ -88,8 +88,8 @@ function localDescent(s :: BoxConstrainedDifferentiableModel, lossFn :: Loss, th
   opt = Opt(NLopt.LD_MMA, length(thetas))
   initializeOptimizer!(s, opt)
   min_objective!(opt, f_and_g!)
-  lower_bounds!(opt, vec(repmat(lb,1,nPoints)))
-  upper_bounds!(opt, vec(repmat(ub,1,nPoints)))
+  lower_bounds!(opt, vec(repeat(lb,1,nPoints)))
+  upper_bounds!(opt, vec(repeat(ub,1,nPoints)))
   (optf,optx,ret) = optimize(opt, vec(thetas))
   return reshape(optx,p,nPoints)
 end
